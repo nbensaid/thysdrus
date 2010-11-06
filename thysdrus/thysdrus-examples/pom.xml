@@ -20,11 +20,11 @@
 	<parent>
 		<artifactId>thysdrus</artifactId>
 		<groupId>net.greencoding</groupId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.0-beta-1</version>
 	</parent>
 	<groupId>net.greencoding</groupId>
 	<artifactId>thysdrus-examples</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0-beta-1</version>
 	<name>thysdrus examples</name>
 	<dependencies>
 		<dependency>
