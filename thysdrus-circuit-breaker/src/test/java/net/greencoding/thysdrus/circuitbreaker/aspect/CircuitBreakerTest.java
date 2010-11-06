@@ -36,7 +36,7 @@ import org.junit.Test;
  */
 public class CircuitBreakerTest {
 
-	final String methodName = "private void net.greencoding.thysdrus.circuitbreaker.aspect.CircuitBreakerTest.callExternalResource(boolean)";
+	final String methodName = "private void net.greencoding.thysdrus.circuitbreaker.aspect.CircuitBreakerTest.callExternalResourceNonSilient(boolean)";
 
 	CircuitBreakerMethodRegistry registry;
 
@@ -49,18 +49,18 @@ public class CircuitBreakerTest {
 	@Test(expected = OpenCircuitException.class)
 	public void testOpenCircuitException() {
 		try {
-			callExternalResource(true);
+			callExternalResourceNonSilient(true);
 		} catch (MyException ignore) {}
 		try {
-			callExternalResource(true);
+			callExternalResourceNonSilient(true);
 		} catch (MyException ignore) {}
 		// next call shall be fail with OpenCircuitException
-		callExternalResource(true);
+		callExternalResourceNonSilient(true);
 	}
 
 	@Test
 	public void testCircuitBreakerReadAnnotationParameter() {
-		callExternalResource(false);
+		callExternalResourceNonSilient(false);
 		CircuitBreakerRegistryEntry entry = registry.getEntry(methodName);
 		assertEquals(methodName, entry.getName());
 		assertTrue(entry.getFailureIndications().contains(MyException.class));
@@ -75,46 +75,64 @@ public class CircuitBreakerTest {
 
 	@Test
 	public void testCircuitBreakerSingleThread() throws InterruptedException {
-		externalResource(true);
+		externalResourceNonSilient(true);
 		Thread.sleep(1000);
-		externalResource(true);
+		externalResourceNonSilient(true);
 		// next call must be blocked
-		externalResource(false);
+		externalResourceNonSilient(false);
 		assertEquals(CircuitBreakerStatus.OPEN, registry.getEntry(methodName).getStatus());
 		assertEquals(0, registry.getEntry(methodName).getFailures().size());
 		long openedTime = registry.getEntry(methodName).getLastOpenedTime();
 		Thread.sleep(3000);
 		// half open call
-		externalResource(true);
+		externalResourceNonSilient(true);
 		// status back to OPEN
 		assertEquals(CircuitBreakerStatus.OPEN, registry.getEntry(methodName).getStatus());
 		// lastOpenedTime updated?
 		assertFalse(openedTime == registry.getEntry(methodName).getLastOpenedTime());
 		Thread.sleep(3000);
-		externalResource(false);
+		externalResourceNonSilient(false);
 		assertEquals(CircuitBreakerStatus.CLOSED, registry.getEntry(methodName).getStatus());
 		assertEquals(1, registry.getEntry(methodName).getClosedCycleCounter());
 	}
 
 	@Test
-	public void testCircuitBreakerMultiThreaded() throws InterruptedException {
-		String methodSignature = "private void net.greencoding.thysdrus.circuitbreaker.aspect.CircuitBreakerTest.MyThread.externalCall(boolean, long)";
-		MyThread thread1 = new MyThread(true, 1000l);
-		MyThread thread2 = new MyThread(true, 2000l);
-		MyThread thread3 = new MyThread(true, 4000l);
+	public void testCircuitBreakerMultiThreadedNonSilient() throws InterruptedException {
+		String methodSignatureNonSilient = "private void net.greencoding.thysdrus.circuitbreaker.aspect.CircuitBreakerTest.MyRunnable.externalCallNonSilient(boolean, long)";
+		boolean isSilientMode = false;
+		Thread thread1 = new Thread(new MyRunnable(true, 1000l, isSilientMode));
+		Thread thread2 = new Thread(new MyRunnable(true, 2000l, isSilientMode));
+		Thread thread3 = new Thread(new MyRunnable(true, 4000l, isSilientMode));
 		// MyThread thread4 = new MyThread(false, 1000l);
 
 		thread1.start();
 		thread2.start();
 		thread3.start();
 		Thread.sleep(4500);
-		assertEquals(CircuitBreakerStatus.OPEN, registry.getEntry(methodSignature).getStatus());
+		assertEquals(CircuitBreakerStatus.OPEN, registry.getEntry(methodSignatureNonSilient).getStatus());
+		// thread4.start();
+	}
+	
+	@Test
+	public void testCircuitBreakerMultiThreadedSilient() throws InterruptedException {
+		String methodSignatureNonSilient = "private void net.greencoding.thysdrus.circuitbreaker.aspect.CircuitBreakerTest.MyRunnable.externalCallSilient(boolean, long)";
+		boolean isSilientMode = true;
+		Thread thread1 = new Thread(new MyRunnable(true, 1000l, isSilientMode));
+		Thread thread2 = new Thread(new MyRunnable(true, 2000l, isSilientMode));
+		Thread thread3 = new Thread(new MyRunnable(true, 4000l, isSilientMode));
+		// MyThread thread4 = new MyThread(false, 1000l);
+		
+		thread1.start();
+		thread2.start();
+		thread3.start();
+		Thread.sleep(4500);
+		assertEquals(CircuitBreakerStatus.OPEN, registry.getEntry(methodSignatureNonSilient).getStatus());
 		// thread4.start();
 	}
 
-	private void externalResource(boolean fail) {
+	private void externalResourceNonSilient(boolean fail) {
 		try {
-			callExternalResource(fail);
+			callExternalResourceNonSilient(fail);
 		} catch (MyException ignore) {
 			// ignore
 		} catch (OpenCircuitException ignore) {
@@ -122,8 +140,8 @@ public class CircuitBreakerTest {
 		}
 	}
 
-	@MonitoredByCircuitBreaker(failureThreshold = 2, failureThresholdTimeFrameMs = 2000, retryAfterMs = 3000, failureIndications = { MyException.class })
-	private void callExternalResource(boolean fail) {
+	@MonitoredByCircuitBreaker(failureThreshold = 2, failureThresholdTimeFrameMs = 2000, retryAfterMs = 3000, failureIndications = { MyException.class }, isSilientMode = false)
+	private void callExternalResourceNonSilient(boolean fail) {
 		if (fail) {
 			throw new MyException();
 		}
@@ -133,31 +151,48 @@ public class CircuitBreakerTest {
 		private static final long serialVersionUID = 1L;
 	}
 
-	private class MyThread extends Thread {
+	private class MyRunnable implements Runnable {
 
 		private boolean fail = false;
 
-		private long exectionDuration = 0l;
+		private long executionDuration = 0l;
 
-		public MyThread(boolean fail, long executionDuration) {
+		private boolean silient = true;
+
+		public MyRunnable(boolean fail, long executionDuration, boolean silient) {
 			this.fail = fail;
-			this.exectionDuration = executionDuration;
+			this.executionDuration = executionDuration;
+			this.silient = silient;
 		}
-
-		@Override
-		public void run() {
-			super.run();
-			try {
-				externalCall(fail, exectionDuration);
-			} catch (MyException ignore) {
-				// ignore
-			} catch (OpenCircuitException ignore) {
-				// ignore
+		
+		public void run(){
+			if (silient) {
+				externalCallSilient(fail, executionDuration);
+			} else {
+				try {
+					externalCallNonSilient(fail, executionDuration);
+				} catch (MyException ignore) {
+					// ignore
+				} catch (OpenCircuitException ignore) {
+					// ignore
+				}
 			}
 		}
 
-		@MonitoredByCircuitBreaker(failureThreshold = 2, failureThresholdTimeFrameMs = 2000, retryAfterMs = 3000, failureIndications = { MyException.class })
-		private void externalCall(boolean fail, long executionDuration) {
+		@MonitoredByCircuitBreaker(failureThreshold = 2, failureThresholdTimeFrameMs = 2000, retryAfterMs = 3000, failureIndications = { MyException.class }, isSilientMode = false)
+		private void externalCallNonSilient(boolean fail, long executionDuration) {
+			try {
+				Thread.sleep(executionDuration);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			if (fail) {
+				throw new MyException();
+			}
+		}
+
+		@MonitoredByCircuitBreaker(failureThreshold = 2, failureThresholdTimeFrameMs = 2000, retryAfterMs = 3000, failureIndications = { MyException.class }, isSilientMode = true)
+		private void externalCallSilient(boolean fail, long executionDuration) {
 			try {
 				Thread.sleep(executionDuration);
 			} catch (InterruptedException e) {
@@ -174,16 +209,14 @@ public class CircuitBreakerTest {
 		try {
 			externalCallWithReturnObject(true);
 		} catch (MyException e) {}
-
 		assertEquals(null, externalCallWithReturnObject(true));
-		
 	}
 
-	@MonitoredByCircuitBreaker(failureThreshold = 1)
+	@MonitoredByCircuitBreaker(failureThreshold = 1, isSilientMode = true)
 	private Object externalCallWithReturnObject(boolean fail) {
 		if (fail) {
 			throw new MyException();
 		}
-		return new Object();
+		return null;
 	}
 }

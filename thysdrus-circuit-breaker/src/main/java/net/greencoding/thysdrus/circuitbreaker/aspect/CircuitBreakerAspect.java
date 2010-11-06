@@ -40,27 +40,36 @@ public class CircuitBreakerAspect {
 
 	private static CircuitBreakerMethodRegistry registry = new CircuitBreakerMethodRegistry();
 
-	@Around("execution(@net.greencoding.pattern.circuitbreaker.annotation.MonitoredByCircuitBreaker * * (..))")
-	public void breakCircuit(final ProceedingJoinPoint pjp) throws Throwable {
+	@Around("execution(@net.greencoding.thysdrus.circuitbreaker.annotation.MonitoredByCircuitBreaker * * (..))")
+	public Object breakCircuit(final ProceedingJoinPoint pjp) throws Throwable {
+		Object returnObject = null;
 		final String method = pjp.getSignature().toLongString();
 		CircuitBreakerStatus status = null;
 		try {
 			final MethodSignature sig = (MethodSignature) pjp.getStaticPart().getSignature();
 			final MonitoredByCircuitBreaker cbAnnotation = sig.getMethod().getAnnotation(MonitoredByCircuitBreaker.class);
-			registry.registeredMehtodIfnecessary(method, cbAnnotation);
+			registry.registerMehtodIfnecessary(method, cbAnnotation);
 			status = registry.getStatusWithHalfOpenExclusiveLockTry(method);
 			if (status.equals(CircuitBreakerStatus.OPEN)) {
 				logger.info("CIRCUIT STATUS: OPEN. Method {} can not be executed. try later!", method);
-				throw new OpenCircuitException();
+				if (cbAnnotation.isSilientMode()) {
+					return null;
+				} else {
+					throw new OpenCircuitException();
+				}
 			} else if (status.equals(CircuitBreakerStatus.HALF_OPEN)) {
 				logger.info("CIRCUIT STATUS: HALF_OPEN. Another thread has the exclusive lock for half open. Method {} can not be executed.", method);
-				throw new OpenCircuitException();
+				if (cbAnnotation.isSilientMode()) {
+					return null;
+				} else {
+					throw new OpenCircuitException();
+				}
 			} else if (status.equals(CircuitBreakerStatus.CLOSED)) {
 				logger.info("CIRCUIT STATUS: CLOSED. execute method {}", method);
-				proceed(pjp);
+				returnObject = proceed(pjp);
 			} else if (status.equals(CircuitBreakerStatus.HALF_OPEN_EXCLUSIVE)) {
 				logger.info("CIRCUIT STATUS: HALF_OPEN_EXCLUSIVE. This thread win the exclusive lock for the half open call. execute method: {}", method);
-				proceed(pjp);
+				returnObject = proceed(pjp);
 				logger.info("CIRCUIT STATUS: HALF_OPEN_EXCLUSIVE. method execution was successfull. now close circuit for method {}", method);
 				registry.closeAndUnlock(method);
 			}
@@ -90,11 +99,12 @@ public class CircuitBreakerAspect {
 		} finally {
 			registry.cleanUp(method);
 		}
+		return returnObject;
 	}
 
-	private void proceed(ProceedingJoinPoint pjp) throws CircuitBreakerMethodExecutionException {
+	private Object proceed(ProceedingJoinPoint pjp) throws CircuitBreakerMethodExecutionException {
 		try {
-			pjp.proceed();
+			return pjp.proceed();
 		} catch (Throwable t) {
 			logger.debug("Exception while method execution: {}", pjp.getSignature().toLongString());
 			throw new CircuitBreakerMethodExecutionException(t);

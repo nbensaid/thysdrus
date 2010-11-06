@@ -35,7 +35,8 @@ public @interface MonitoredByCircuitBreaker {
 	int failureThreshold() default 5;
 	long failureThresholdTimeFrameMs() default 60000l;
 	long retryAfterMs() default 10000l;
-	Class<? extends Throwable> [] failureIndications() default {Exception.class};  
-
+	Class<? extends Throwable> [] failureIndications() default {Exception.class}; 
+	boolean isSilientMode() default true;
+	
 	// TODO exclude exception as failure
 }

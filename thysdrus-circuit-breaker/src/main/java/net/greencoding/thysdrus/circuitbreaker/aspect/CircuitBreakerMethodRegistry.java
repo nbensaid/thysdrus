@@ -48,7 +48,7 @@ public class CircuitBreakerMethodRegistry {
 
 	// this method is call before every CircuitBreaker annotated method is
 	// called.
-	public void registeredMehtodIfnecessary(String method, MonitoredByCircuitBreaker annotation) {
+	public void registerMehtodIfnecessary(String method, MonitoredByCircuitBreaker annotation) {
 		Map<String, Long> localMap = threadLocalMap.get();
 		if (localMap == null) {
 			localMap = new HashMap<String, Long>();
