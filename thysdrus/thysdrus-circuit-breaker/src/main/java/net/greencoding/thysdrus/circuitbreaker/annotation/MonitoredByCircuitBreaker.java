@@ -32,10 +32,17 @@ import java.lang.annotation.Target;
 @Documented
 public @interface MonitoredByCircuitBreaker {
 
+	// open circuit breaker if failure threshold reached 
 	int failureThreshold() default 5;
+	// open ciruict breaker if failure threshold reached in 60sec
 	long failureThresholdTimeFrameMs() default 60000l;
+	
+	// transition to halfopen
 	long retryAfterMs() default 10000l;
+	
+	// Exception which indicates failures 
 	Class<? extends Throwable> [] failureIndications() default {Exception.class}; 
+	
 	boolean isSilientMode() default true;
 	
 	// TODO exclude exception as failure
