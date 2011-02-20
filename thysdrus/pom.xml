@@ -62,6 +62,7 @@
 		<module>thysdrus-examples</module>
 		<module>thysdrus-circuit-breaker-core</module>
 		<module>thysdrus-circuit-breaker-aspectj</module>
+		<module>thysdrus-circuit-breaker-annotation</module>
 	</modules>
 
 	<build>
