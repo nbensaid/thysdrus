@@ -63,6 +63,7 @@
 		<module>thysdrus-circuit-breaker-core</module>
 		<module>thysdrus-circuit-breaker-aspectj</module>
 		<module>thysdrus-circuit-breaker-annotation</module>
+		<module>thysdrus-circuit-breaker-spring-aop</module>
 	</modules>
 
 	<build>
