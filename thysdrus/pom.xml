@@ -60,6 +60,7 @@
 	<modules>
 		<module>thysdrus-circuit-breaker</module>
 		<module>thysdrus-examples</module>
+		<module>thysdrus-circuit-beaker-core</module>
 	</modules>
 
 	<build>
