@@ -22,10 +22,7 @@ public class DefaultCircuitBreakerHandler implements CircuitBreakerHandler {
 	private CircuitBreakerRegistry registry = CircuitBreakerRegistryFactory.getSingelton();
 
 	private static CircuitBreakerHandler singelton = null; 
-	
-	private DefaultCircuitBreakerHandler() {
-	}
-	
+		
 	public static CircuitBreakerHandler getSingleton() {
 		if (singelton == null){
 			singelton = new DefaultCircuitBreakerHandler();
@@ -53,12 +50,12 @@ public class DefaultCircuitBreakerHandler implements CircuitBreakerHandler {
 		final CircuitBreakerStatus status = registry.getCircuitBreakerStatus(circuitBreakerKey);
 		
 		if (CircuitBreakerStatus.CLOSED.equals(status)){
-			logger.info("CB {} is in CLOSED state - execute method and track the result");
+			logger.info("CB {} is in CLOSED state - execute method and track the result", circuitBreakerKey);
 			proceed(pjp, circuitBreakerKey, methodInvocationResult, false);
 		} 
 		
 		if (CircuitBreakerStatus.HALF_OPEN.equals(status)) {
-			logger.info("CB {} is in HALF-OPEN State - skip method execution");
+			logger.info("CB {} is in HALF-OPEN State - skip method execution", circuitBreakerKey);
 			methodInvocationResult.setSuccessfullyTerminated(false);
 			methodInvocationResult.setBlockedByCircuitBreaker(true);
 			methodInvocationResult.setReturnObject(null);
@@ -80,6 +77,7 @@ public class DefaultCircuitBreakerHandler implements CircuitBreakerHandler {
 				methodInvocationResult.setBlockedByCircuitBreaker(true);
 				methodInvocationResult.setReturnObject(null);
 				methodInvocationResult.setCircuitBreakerStatus(status);
+				logger.info("CB {} is OPEN. Method invocation blocked.", circuitBreakerKey);
 			}
 		}
 		

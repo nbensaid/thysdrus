@@ -195,10 +195,7 @@ public final class DefaultCircuitBreakerRegistry implements CircuitBreakerRegist
 					entry.setStatus(CircuitBreakerStatus.OPEN);
 					entry.setLastOpenedTimestamp(now);
 					entry.getLastFailureTimestamps().clear();
-				} else {
-					throw new IllegalStateException();
 				}
-				
 				// TODO fire stats events
 			}
 		}

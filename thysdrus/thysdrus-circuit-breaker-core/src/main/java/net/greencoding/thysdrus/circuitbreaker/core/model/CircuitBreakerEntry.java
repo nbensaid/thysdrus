@@ -71,4 +71,10 @@ public class CircuitBreakerEntry {
 		this.lastOpenedTimestamp = lastOpenedTimestamp;
 	}
 
+	@Override
+	public String toString() {
+		return "CircuitBreakerEntry [circuitBreaker=" + circuitBreaker + ", status=" + status + ", halfOpenLock=" + halfOpenLock + ", lastFailureTimestamps="
+				+ lastFailureTimestamps + ", lastOpenedTimestamp=" + lastOpenedTimestamp + "]";
+	}
+
 }

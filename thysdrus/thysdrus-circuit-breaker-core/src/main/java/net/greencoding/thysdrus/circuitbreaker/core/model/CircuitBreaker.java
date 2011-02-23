@@ -1,6 +1,7 @@
 package net.greencoding.thysdrus.circuitbreaker.core.model;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -82,6 +83,13 @@ public class CircuitBreaker {
 
 	public void setFailureIndications(Class<? extends Throwable>[] failureIndications) {
 		this.failureIndications = failureIndications;
+	}
+
+	@Override
+	public String toString() {
+		return "CircuitBreaker [circuitBreakerKey=" + circuitBreakerKey + ", circuitBreakerGroup=" + circuitBreakerGroup + ", registeredMethods="
+				+ registeredMethods + ", failureThreshold=" + failureThreshold + ", failureThresholdTimeFrameMs=" + failureThresholdTimeFrameMs
+				+ ", retryTimeoutMs=" + retryTimeoutMs + ", failureIndications=" + Arrays.toString(failureIndications) + "]";
 	}
 	
 }

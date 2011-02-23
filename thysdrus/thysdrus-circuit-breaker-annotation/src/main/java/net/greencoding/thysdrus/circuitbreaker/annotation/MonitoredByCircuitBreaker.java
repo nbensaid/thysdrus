@@ -38,12 +38,14 @@ public @interface MonitoredByCircuitBreaker {
 	long failureThresholdTimeFrameMs() default 60000l;
 	
 	// transition to halfopen
-	long retryAfterMs() default 10000l;
+	long retryTimeoutMs() default 10000l;
 	
 	// Exception which indicates failures 
 	Class<? extends Throwable> [] failureIndications() default {Exception.class}; 
 	
 	boolean isSilientMode() default true;
 	
+	String groupId() default "";
+
 	// TODO exclude exception as failure
 }
