@@ -50,13 +50,6 @@
 			<version>3.14.0-GA</version>
 		</dependency>
 		<dependency>
-			<groupId>com.impetus.annovention</groupId>
-			<artifactId>annovention</artifactId>
-			<version>0.1</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/annovention-0.1.jar</systemPath>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
@@ -72,6 +65,13 @@
 			<artifactId>logback-classic</artifactId>
 			<version>0.9.26</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.reflections</groupId>
+			<artifactId>reflections</artifactId>
+			<version>0.9.5-RC3</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 	

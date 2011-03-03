@@ -41,12 +41,51 @@ public class DefaultCircuitBreakerHandler implements CircuitBreakerHandler {
 			throw new IllegalStateException("CB is null");
 		}
 		String circuitBreakerKey = circuitBreaker.getCircuitBreakerKey();
-		MethodInvocationResult methodInvocationResult = new MethodInvocationResult();
 		
 		if (! registry.isRegistered(circuitBreakerKey)) {
 			registry.registerCircuitBreaker(circuitBreaker);
 		}
 		
+		return handleMethodInvocation(pjp, circuitBreakerKey);
+	}
+
+	private void proceed(final ProceedingJoinPoint pjp, final String circuitBreakerKey, final MethodInvocationResult methodInvocationResult, boolean inHalfOpen) {
+		try {
+			methodInvocationResult.setReturnObject(proceed(pjp));
+			methodInvocationResult.setSuccessfullyTerminated(true);
+			if (inHalfOpen) {
+				registry.releaseHalfOpenLock(circuitBreakerKey, CircuitBreakerStatus.CLOSED);
+			}
+			logger.info("succesfully executed CB-key: {}, MethodInvocationResult: {}", circuitBreakerKey, methodInvocationResult);
+		} catch (CircuitBreakerMethodExecutionException e) {
+			methodInvocationResult.setCause(e.getCause());
+			boolean isFailure = registry.handleMethodInvocationException(circuitBreakerKey, e.getCause(), inHalfOpen);
+			if (isFailure) {
+				methodInvocationResult.setFailureWhileExecution(true);
+			} else {
+				methodInvocationResult.setSuccessfullyTerminated(true);
+			}
+			logger.info("failure while execution: CB-key: {}, MethodInvocationResult: {}", circuitBreakerKey, methodInvocationResult);
+		}
+	}
+	
+	private Object proceed(final ProceedingJoinPoint pjp) throws CircuitBreakerMethodExecutionException {
+		try {
+			return pjp.proceed();
+		} catch (Throwable t) {
+			logger.warn("Exception while method execution: {}", pjp.getSignature().toLongString());
+			throw new CircuitBreakerMethodExecutionException(t);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.greencoding.thysdrus.circuitbreaker.core.handler.CircuitBreakerHandler#handleMethodInvocation(org.aspectj.lang.ProceedingJoinPoint, java.lang.String)
+	 */
+	@Override
+	public MethodInvocationResult handleMethodInvocation(ProceedingJoinPoint pjp, String circuitBreakerKey) {
+		
+		MethodInvocationResult methodInvocationResult = new MethodInvocationResult();
 		final CircuitBreakerStatus status = registry.getCircuitBreakerStatus(circuitBreakerKey);
 		
 		if (CircuitBreakerStatus.CLOSED.equals(status)){
@@ -84,32 +123,9 @@ public class DefaultCircuitBreakerHandler implements CircuitBreakerHandler {
 		return methodInvocationResult;
 	}
 
-	private void proceed(final ProceedingJoinPoint pjp, final String circuitBreakerKey, final MethodInvocationResult methodInvocationResult, boolean inHalfOpen) {
-		try {
-			methodInvocationResult.setReturnObject(proceed(pjp));
-			methodInvocationResult.setSuccessfullyTerminated(true);
-			if (inHalfOpen) {
-				registry.releaseHalfOpenLock(circuitBreakerKey, CircuitBreakerStatus.CLOSED);
-			}
-			logger.info("succesfully executed CB-key: {}, MethodInvocationResult: {}", circuitBreakerKey, methodInvocationResult);
-		} catch (CircuitBreakerMethodExecutionException e) {
-			methodInvocationResult.setCause(e.getCause());
-			boolean isFailure = registry.handleMethodInvocationException(circuitBreakerKey, e.getCause(), inHalfOpen);
-			if (isFailure) {
-				methodInvocationResult.setFailureWhileExecution(true);
-			} else {
-				methodInvocationResult.setSuccessfullyTerminated(true);
-			}
-			logger.info("failure while execution: CB-key: {}, MethodInvocationResult: {}", circuitBreakerKey, methodInvocationResult);
-		}
-	}
-	
-	private Object proceed(final ProceedingJoinPoint pjp) throws CircuitBreakerMethodExecutionException {
-		try {
-			return pjp.proceed();
-		} catch (Throwable t) {
-			logger.warn("Exception while method execution: {}", pjp.getSignature().toLongString());
-			throw new CircuitBreakerMethodExecutionException(t);
-		}
+
+	@Override
+	public void registerCircuitBreaker(CircuitBreaker circuitBreaker) {
+		registry.registerCircuitBreaker(circuitBreaker);
 	}
 }

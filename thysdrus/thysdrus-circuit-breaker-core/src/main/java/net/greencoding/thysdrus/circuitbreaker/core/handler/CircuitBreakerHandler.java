@@ -22,5 +22,7 @@ public interface CircuitBreakerHandler {
 	 * @throws CircuitBreakerMethodExecutionException which includes the real exception while method invocation as cause.
 	 */
 	public MethodInvocationResult handleMethodInvocation(ProceedingJoinPoint pjp, CircuitBreaker circuitBreaker);
+	public MethodInvocationResult handleMethodInvocation(ProceedingJoinPoint pjp, String circuitBreakerKey);
+	public void registerCircuitBreaker(CircuitBreaker circuitBreaker);
 	
 }
