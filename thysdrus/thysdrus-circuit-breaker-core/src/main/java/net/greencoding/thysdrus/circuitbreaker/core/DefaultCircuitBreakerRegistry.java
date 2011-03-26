@@ -95,6 +95,7 @@ public final class DefaultCircuitBreakerRegistry implements CircuitBreakerRegist
 	@Override
 	public CircuitBreakerStatus getCircuitBreakerStatus(String circuitBreakerKey) {
 		CircuitBreakerEntry entry = registry.get(circuitBreakerKey);
+		logger.info("CircuitBreakerEntry: {}", entry);
 		if (entry == null) {
 			throw new IllegalStateException("No CircuitBreakerEntry found for key: " + circuitBreakerKey);
 		}
