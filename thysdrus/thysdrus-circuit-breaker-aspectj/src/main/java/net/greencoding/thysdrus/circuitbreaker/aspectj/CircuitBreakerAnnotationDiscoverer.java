@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +31,7 @@ public class CircuitBreakerAnnotationDiscoverer implements AnnotationDiscoverer 
 	
 	private Map<String, CircuitBreaker> circuitBreakerToRegister = new HashMap<String, CircuitBreaker>();
 
-	@Override
+	//@Override
 	public void discover() {
 		Reflections reflections = new Reflections("",new MethodAnnotationsScanner());
         
@@ -42,15 +41,12 @@ public class CircuitBreakerAnnotationDiscoverer implements AnnotationDiscoverer 
 			return;
 		}
 		
-		Iterator<Method> iterator = methods.iterator();
-		while (iterator.hasNext()){
-			Method method = iterator.next();
+		for (Method method : methods){
 			checkCircuitBreakerAnnotation(method);
 		}
 		
-		Iterator<String> keyIterator = circuitBreakerToRegister.keySet().iterator();
-		while(keyIterator.hasNext()) {
-			cbHandler.registerCircuitBreaker(circuitBreakerToRegister.get(keyIterator.next()));
+		for (String key : circuitBreakerToRegister.keySet()){
+			cbHandler.registerCircuitBreaker(circuitBreakerToRegister.get(key));
 		}
 		
 		circuitBreakerToRegister.clear();
