@@ -19,6 +19,7 @@ package net.greencoding.thysdrus.circuitbreaker.aspectj;
 //import static org.junit.Assert.*;
 import net.greencoding.thysdrus.circuitbreaker.annotation.MonitoredByCircuitBreaker;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,35 +38,57 @@ public class CircuitBreakerAspectTest {
 	@Test
 	public void testSimpleCircuitBreakerBlocking() {
 
+		Exception exception = null;
 		try {
 			callExternalResource(true);
-		} catch (MyException ignore) {}
-
+		} catch (MyException ignore) {
+			exception = ignore;
+		}
+		Assert.assertEquals(MyException.class, exception.getClass());
+		exception = null;
+		
 		try {
 			callExternalResource(true);
-		} catch (MyException ignore) {}
+		} catch (MyException ignore) {
+			exception = ignore;
+		}
+		Assert.assertEquals(MyException.class, exception.getClass());
+		exception = null;
 
-		// Assert: test will fail with a thrown MyException in the next call, 
-		// if the next call is not blocked by CB.
 		// next call shall be blocked by CB.
-		callExternalResource(true);
+		try {
+			callExternalResource(true);
+		} catch (MyException e) {
+			Assert.fail("MyException not expected here");
+		}
 	}
 
 	@Test
 	public void testSimpleCircuitBreakerGroupBlocking() {
 
+		Exception exception = null;
 		try {
 			callExternalResource1GroupA(true);
-		} catch (MyException ignore) {}
+		} catch (Exception ignore) {
+			exception = ignore;
+		}
+		Assert.assertEquals(MyException.class, exception.getClass());
+		
+		exception = null;
 
 		try {
 			callExternalResource2GroupA(true);
-		} catch (MyException ignore) {}
+		} catch (Exception ignore) {
+			exception = ignore;
+		}
+		Assert.assertEquals(MyException.class, exception.getClass());
 
-		// Assert: test will fail with a thrown MyException in the next call, 
-		// if the next call is not blocked by CB.
 		// next call shall be blocked by CB.
-		callExternalResource1GroupA(true);
+		try {
+			callExternalResource1GroupA(true);
+		} catch (MyException e) {
+			Assert.fail("MyException not expected here");
+		}
 	}
 
 	@MonitoredByCircuitBreaker(failureThreshold = 2, failureThresholdTimeFrameMs = 2000, retryTimeoutMs = 3000, failureIndications = { MyException.class }, isSilientMode = false)
