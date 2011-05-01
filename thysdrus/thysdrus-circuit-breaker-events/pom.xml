@@ -9,4 +9,13 @@
   <artifactId>thysdrus-circuit-breaker-events</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <name>Circuit Breaker Events</name>
+  <dependencies>
+  	<dependency>
+  		<groupId>net.greencoding</groupId>
+  		<artifactId>thysdrus-event-core</artifactId>
+  		<version>1.0.0-SNAPSHOT</version>
+  		<type>jar</type>
+  		<scope>compile</scope>
+  	</dependency>
+  </dependencies>
 </project>
