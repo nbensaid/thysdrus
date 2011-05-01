@@ -57,6 +57,8 @@ public class CircuitBreakerAspect {
 		MethodInvocationResult methodInvocationResult = cbHandler.handleMethodInvocation(pjp, circuitBreakerKey);
 		if (methodInvocationResult.getReturnObject() != null) {
 			return methodInvocationResult.getReturnObject();
+		} else if (methodInvocationResult.getCause() != null){
+			throw methodInvocationResult.getCause();
 		} else {
 			return null;
 		}
