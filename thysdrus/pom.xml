@@ -65,6 +65,7 @@
 		<module>thysdrus-circuit-breaker-annotation</module>
 		<module>thysdrus-circuit-breaker-spring-aop</module>
 		<module>thysdrus-circuit-breaker-events</module>
+		<module>thysdrus-event-core</module>
 	</modules>
 
 	<build>
