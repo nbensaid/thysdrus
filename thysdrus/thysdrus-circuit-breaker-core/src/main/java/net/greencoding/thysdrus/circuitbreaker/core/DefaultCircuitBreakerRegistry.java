@@ -8,6 +8,10 @@ import net.greencoding.thysdrus.circuitbreaker.core.model.CircuitBreaker;
 import net.greencoding.thysdrus.circuitbreaker.core.model.CircuitBreakerEntry;
 import net.greencoding.thysdrus.circuitbreaker.core.model.CircuitBreakerRegisterResult;
 import net.greencoding.thysdrus.circuitbreaker.core.model.CircuitBreakerStatus;
+import net.greencoding.thysdrus.circuitbreaker.event.CircuitBreakerRegisteredEvent;
+import net.greencoding.thysdrus.event.core.DefaultEventHub;
+import net.greencoding.thysdrus.event.core.Event;
+import net.greencoding.thysdrus.event.core.EventHub;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +19,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Circuit Breaker Registry. It manages all circuit breakers. 
  * 
- * @author Nabil Ben Said (nabil.ben.said@gmail.com)
+ * @author Nabil Ben Said (nabil.bensaid@gmail.com)
  * 
  */
 public final class DefaultCircuitBreakerRegistry implements CircuitBreakerRegistry {
@@ -25,6 +29,8 @@ public final class DefaultCircuitBreakerRegistry implements CircuitBreakerRegist
 	private final String name;
 	
 	private Map<String, CircuitBreakerEntry> registry = new HashMap<String, CircuitBreakerEntry>();
+	
+	private EventHub eventHub = DefaultEventHub.getSingelton();
 
 	protected DefaultCircuitBreakerRegistry(String name) {
 		this.name = name;
@@ -83,6 +89,8 @@ public final class DefaultCircuitBreakerRegistry implements CircuitBreakerRegist
 		}
 
 		logger.info("successfully registered CB under CB-Entry {}", entry);
+		Event event = new CircuitBreakerRegisteredEvent();
+		eventHub.publishEvent(event);
 		return new CircuitBreakerRegisterResult(true, "CB successfully registered");
 	}
 
