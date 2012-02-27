@@ -1,0 +1,35 @@
+= Introduction =
+
+Thysdrus is a suite of common design pattern implementations, that can be used in your existing java applications to achieve a higher stability of your System. 
+
+
+= Circuit Breaker Integration =
+
+To make use of the thysdrus implementation of the circuit breaker pattern you need to:
+  * add the thysdrus-circuit-breaker-VERSION.jar to your classpath. 
+
+  * annotate the method, that you want to protect, with the `@MonitoredByCircuitBreaker` annotation:   
+<code>
+@MonitoredByCircuitBreaker
+public static void doExternalCall() {
+	// request some resource from another subsystem
+        ...
+}
+</code>
+
+  * create an aop.xml file and include the packages of your source code, which uses `@MonitoredByCircuitBreaker` annotation:
+<code>
+<aspectj>
+ 	<aspects>
+ 		<aspect name="net.greencoding.thysdrus.circuitbreaker.aspect.CircuitBreakerAspect" />
+	</aspects> 
+	<weaver>
+		<include within="com.yourcompany..*" />
+	</weaver>
+</aspectj>
+</code>
+  * place the aop.xml file in folder `META-INF` in the classpath.
+  * add the aspectj weaver as JVM agent: 
+<code>
+-javaagent:./lib/aspectjweaver-1.6.7.jar
+</code>
